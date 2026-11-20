@@ -1,5 +1,5 @@
 /* Guide de Pédiatrie — cache pour un chargement rapide et l'accès hors ligne */
-const V="gp-20261120170632";
+const V="gp-20261120230409";
 const CORE=["./","index.html","data/croissance.json","manifest.json","icon-192.png","icon-512.png","apple-touch-icon.png","favicon-32.png","config.js","vendor/supabase.js","fonts/manrope-latin-wght-normal.woff2","fonts/fraunces-latin-opsz-normal.woff2"];
 self.addEventListener("install",e=>{e.waitUntil(caches.open(V).then(c=>c.addAll(CORE.map(u=>new Request(u,{cache:"reload"})))).then(()=>self.skipWaiting()))});
 self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==V).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});

@@ -91,3 +91,13 @@ Les données personnelles de chaque utilisateur sont chiffrées **sur son appare
 | Conditions d'utilisation | Acceptation obligatoire à l'inscription, puis à chaque nouvelle version (enregistrée dans le compte). Lisibles et téléchargeables en PDF depuis l'écran de connexion et le profil. |
 | Mentions | © sur l'écran de connexion, le menu, chaque page PDF, le code publié et le fichier `LICENSE` (tous droits réservés). |
 | Limite | Le code de l'interface reste téléchargeable, comme pour toute application web. Les anciennes versions de ce dépôt contiennent encore le contenu dans l'historique : rendre le dépôt privé pour le fermer. |
+
+## Connexion biométrique (v20)
+
+| Élément | Détail |
+|---|---|
+| Principe | Clé d'accès WebAuthn (passkey) liée à l'appareil : Face ID, Touch ID, empreinte (Android) ou Windows Hello. Le visage ou l'empreinte ne quittent jamais l'appareil. |
+| Protection | Appareils récents (extension PRF) : la clé qui chiffre l'identifiant est produite par la puce sécurisée, uniquement après reconnaissance. Appareils plus anciens : clé non exportable de l'appareil, libérée seulement après une vérification biométrique réussie. |
+| Serveur | Rien n'est envoyé : la connexion se fait ensuite normalement (mot de passe + chiffrement de bout en bout). |
+| Verrouillage | Déverrouillage instantané, même hors ligne. |
+| Gestion | Activation proposée après une connexion par mot de passe, ou dans Profil → Sécurité ; désactivable à tout moment. Mise à jour automatique au changement de mot de passe ; désactivation propre si le mot de passe a changé sur un autre appareil. |
