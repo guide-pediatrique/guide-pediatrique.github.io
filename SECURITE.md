@@ -101,3 +101,12 @@ Les données personnelles de chaque utilisateur sont chiffrées **sur son appare
 | Serveur | Rien n'est envoyé : la connexion se fait ensuite normalement (mot de passe + chiffrement de bout en bout). |
 | Verrouillage | Déverrouillage instantané, même hors ligne. |
 | Gestion | Activation proposée après une connexion par mot de passe, ou dans Profil → Sécurité ; désactivable à tout moment. Mise à jour automatique au changement de mot de passe ; désactivation propre si le mot de passe a changé sur un autre appareil. |
+
+## Renforcements v21
+
+| Élément | Détail |
+|---|---|
+| Mots de passe ayant fuité | À l'inscription et au changement de mot de passe, vérification auprès de Have I Been Pwned par k-anonymat : seuls les 5 premiers caractères de l'empreinte SHA-1 sont envoyés, jamais le mot de passe. Un mot de passe présent dans une fuite connue est refusé. Si le service est injoignable, la vérification est ignorée. |
+| Écran masqué | Quand l'application passe en arrière-plan, un écran neutre remplace le contenu : l'aperçu du sélecteur d'applications ne montre pas les données. |
+| Référent | `no-referrer` : aucun site externe (PubMed, revues) ne reçoit l'adresse de la page consultée. |
+| Réseau | Pastille « Hors ligne » dans la barre du haut ; synchronisation automatique (avis, contenu, mises à jour) au retour de la connexion. |
