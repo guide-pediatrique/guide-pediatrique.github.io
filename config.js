@@ -17,6 +17,9 @@ window.PG_SERVEUR = {
 };
 
 /* --- Pour passer sur un autre serveur : supprimer les « // » d'UN seul bloc ci-dessous --- */
+/* Sécurité : par défaut l'application ne communique qu'avec Supabase (*.supabase.co).
+   Un autre serveur doit aussi être autorisé dans la règle de sécurité (CSP) de index.html :
+   demander une reconstruction de l'application avant de changer de serveur. */
 
 /* Deuxième serveur EN LIGNE avec PocketBase (voir CONNEXIONS.md §1) */
 // window.PG_SERVEUR = { type: "pocketbase", url: "https://pb.mondomaine.com" };

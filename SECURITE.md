@@ -110,3 +110,17 @@ Les données personnelles de chaque utilisateur sont chiffrées **sur son appare
 | Écran masqué | Quand l'application passe en arrière-plan, un écran neutre remplace le contenu : l'aperçu du sélecteur d'applications ne montre pas les données. |
 | Référent | `no-referrer` : aucun site externe (PubMed, revues) ne reçoit l'adresse de la page consultée. |
 | Réseau | Pastille « Hors ligne » dans la barre du haut ; synchronisation automatique (avis, contenu, mises à jour) au retour de la connexion. |
+
+## Audit d'intrusion du 21/11/2026 (supabase_v11.sql)
+
+52 attaques simulées sur la base (mêmes scripts SQL et mêmes droits par défaut que Supabase) et attaques dans l'application (injection de code par un membre malveillant, vol de données, cadre piégé, exfiltration).
+
+| Faille trouvée | Gravité | Correction |
+|---|---|---|
+| Connexion par téléphone : un visiteur sans compte obtenait l'e-mail d'un membre à partir de son numéro, et pouvait lister les numéros inscrits | Élevée | `email_for_phone(tel, mot_de_passe)` : l'e-mail n'est rendu qu'avec le bon mot de passe ; 10 essais par numéro et par 15 min ; durée de réponse identique que le numéro existe ou non ; ancienne fonction supprimée |
+| Avis : relecture des réponses d'un avis expiré via une fonction interne (`avis_json`) en connaissant son identifiant | Moyenne | fonctions internes fermées (`avis_json`, `avis_groupe`, `avis_purge`, `avis_visible`) |
+| Classement : un membre pouvait insérer du HTML affiché chez les autres (bloqué en exécution par la CSP) et inonder la table | Moyenne | données validées et neutralisées à l'affichage ; une ligne par personne, 2 Ko maximum |
+| Application affichable dans le cadre invisible d'un site pirate (« clickjacking ») : la protection existante ne fonctionnait pas | Moyenne | page masquée dès qu'elle est dans un cadre |
+| Règle de sécurité (CSP) autorisant les connexions vers n'importe quel site | Faible | connexions limitées à Supabase, au contrôle des mots de passe divulgués, à la traduction et à PubMed |
+
+Ce qui a résisté : lecture, modification, suppression ou appropriation des données d'un autre membre (12 tables), lecture par l'administrateur des données personnelles et du coffre de clés, élévation en administrateur ou en pédiatre, écriture du contenu des cours, lecture anonyme de toutes les tables, identité des auteurs d'avis, fichiers des autres membres, injection de code dans les avis, la banque EVC, la liste des membres et le tableau de bord administrateur.
