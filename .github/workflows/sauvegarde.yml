@@ -1,0 +1,60 @@
+# Sauvegarde automatique quotidienne de la base Supabase (Guide de Pédiatrie)
+# - chaque nuit à 03 h 17 (heure de Niamey), et à la demande (onglet Actions > Run workflow)
+# - la sauvegarde est CHIFFRÉE (AES-256) avec votre mot de passe de sauvegarde avant d'être conservée
+# - conservée 30 jours dans l'onglet Actions du dépôt
+# Secrets à créer : Settings > Secrets and variables > Actions > New repository secret
+#   SUPABASE_DB_URL           chaîne « Session pooler » de Supabase (bouton Connect), avec le mot de passe de la base
+#   SAUVEGARDE_MOT_DE_PASSE   phrase secrète longue, à garder hors du dépôt (sans elle, la sauvegarde est illisible)
+name: Sauvegarde de la base
+on:
+  schedule:
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency: sauvegarde
+jobs:
+  sauvegarde:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Vérifier les secrets
+        env:
+          DB: ${{ secrets.SUPABASE_DB_URL }}
+          PASS: ${{ secrets.SAUVEGARDE_MOT_DE_PASSE }}
+        run: |
+          if [ -z "$DB" ] || [ -z "$PASS" ]; then
+            echo "::error::Créez les secrets SUPABASE_DB_URL et SAUVEGARDE_MOT_DE_PASSE (voir SAUVEGARDE.md)"; exit 1; fi
+          if [ ${#PASS} -lt 16 ]; then echo "::error::SAUVEGARDE_MOT_DE_PASSE doit faire au moins 16 caractères"; exit 1; fi
+      - name: Installer le client PostgreSQL 17
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
+          sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client-17 >/dev/null
+      - name: Sauvegarder et chiffrer
+        env:
+          DB: ${{ secrets.SUPABASE_DB_URL }}
+          PASS: ${{ secrets.SAUVEGARDE_MOT_DE_PASSE }}
+        run: |
+          set -euo pipefail
+          umask 077
+          D=$(date -u +%Y%m%d-%H%M); W=$(mktemp -d)
+          PG=/usr/lib/postgresql/17/bin
+          # 1. tables de l'application (structure + données ; contenus personnels déjà chiffrés de bout en bout)
+          $PG/pg_dump "$DB" --schema=public --no-owner --no-privileges -f "$W/1_application.sql"
+          # 2. comptes de connexion (nécessaires pour restaurer l'accès de chaque membre)
+          $PG/pg_dump "$DB" --data-only --table=auth.users --table=auth.identities --no-owner --no-privileges -f "$W/2_comptes.sql"
+          echo "Sauvegarde du $D (UTC) — Guide de Pédiatrie. Restauration : voir SAUVEGARDE.md" > "$W/LISEZMOI.txt"
+          tar -C "$W" -czf "$W/s.tgz" 1_application.sql 2_comptes.sql LISEZMOI.txt
+          printf '%s' "$PASS" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 --symmetric --cipher-algo AES256 -o "sauvegarde-$D.tgz.gpg" "$W/s.tgz"
+          rm -rf "$W"
+          echo "NOM=sauvegarde-$D" >> "$GITHUB_ENV"
+          ls -la sauvegarde-*.gpg
+      - name: Conserver la sauvegarde chiffrée (30 jours)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.NOM }}
+          path: sauvegarde-*.tgz.gpg
+          retention-days: 30
+          if-no-files-found: error

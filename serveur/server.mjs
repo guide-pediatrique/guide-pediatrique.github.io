@@ -181,6 +181,10 @@ http.createServer(async (req, res) => {
     if (p === "/auth/password" && req.method === "POST") { const b = await readJSON(req);
       if (!checkPw(b.ancien || "", me.hash)) return err(res, 400, "Mot de passe actuel incorrect."); if (!PW_RE.test(b.nouveau || "")) return err(res, 400, "Nouveau mot de passe trop faible.");
       q.setHash.run(hashPw(b.nouveau), me.id); return send(res, 204); }
+    if (p === "/auth/supprimer" && req.method === "POST") { const b = await readJSON(req);
+      if (!checkPw(b.mot_de_passe || "", me.hash)) return err(res, 400, "Mot de passe incorrect.");
+      for (const t of ["records", "avis_acces", "avis_quota"]) db.prepare(`DELETE FROM ${t} WHERE user_id=?`).run(me.id);
+      db.prepare("DELETE FROM users WHERE id=?").run(me.id); return send(res, 204); }
     if (p === "/admin/users") { if (!pub(me).isAdmin) return err(res, 403, "Réservé à l'administrateur."); return send(res, 200, q.allUsers.all().map(pub)); }
 
     /* Traduction anglais → français (facultatif) : DEEPL_API_KEY dans l'environnement du serveur */
